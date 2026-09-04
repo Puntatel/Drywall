@@ -1,0 +1,29 @@
+<h3 style="margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem; font-size: 1.1rem;">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    Historial Reciente
+</h3>
+{% for p in proyectos %}
+    <div class="historial-item">
+        <strong style="color: var(--slate-900); font-size: 0.9rem;">{{ p.nombre_cliente }}</strong><br>
+        <span style="color: var(--text-muted); font-size: 0.825rem;">{{ p.get_tipo_estructura_display }}</span><br>
+        <small style="color: #64748b; font-size: 0.775rem;">Dim: {{ p.largo }}m x {{ p.alto_ancho }}m</small><br>
+        
+        <div style="display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.25rem;">
+            <span class="badge" style="margin-top: 0;">Perfil: {{ p.medida_perfil }}mm</span>
+            {% if p.costo_mano_obra_m2 > 0 %}
+                <span class="badge" style="background: #f0fdf4; color: #166534; margin-top: 0;">M.O.: ${{ p.costo_mano_obra_m2 }}</span>
+            {% endif %}
+            {% if p.con_aislacion %}
+                <span class="badge" style="background: #fff7ed; color: #c2410c; margin-top: 0;">Aislación</span>
+            {% endif %}
+        </div>
+        
+        {% if p.puertas > 0 or p.ventanas > 0 %}
+            <div style="margin-top: 0.35rem; color: #d97706; font-size: 0.75rem; font-weight: 500;">
+                Aberturas: P:{{ p.puertas }} | V:{{ p.ventanas }}
+            </div>
+        {% endif %}
+    </div>
+{% empty %}
+    <p style="color: var(--text-muted); font-size: 0.875rem; margin: 0;">No hay proyectos procesados aún.</p>
+{% endfor %}

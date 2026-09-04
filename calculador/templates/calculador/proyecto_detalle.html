@@ -1,0 +1,223 @@
+{% extends 'calculador/base.html' %}
+
+{% block title %}Proyecto: {{ proyecto.nombre_cliente }}{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+    <div>
+        <h2 style="margin: 0;">Proyecto: {{ proyecto.nombre_cliente }}</h2>
+        <span style="font-size: 14px; color: #7f8c8d;">ID Seguimiento: #{{ proyecto.id|stringformat:"04d" }}</span>
+    </div>
+    <a href="{% url 'panel_calculadora' %}" class="btn" style="background: #7f8c8d; color: white;">← Cerrar y Volver a Clientes</a>
+</div>
+
+<div class="grid-2">
+    <!-- Formulario Técnico de Carga -->
+    <div style="background: var(--light); padding: 20px; border-radius: 6px; height: fit-content;">
+        <h3>+ Añadir Habitación o Muro al Presupuesto</h3>
+        <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="agregar_ambiente" value="1">
+
+            <div class="form-group">
+                <label>Nombre del Ambiente / Ubicación:</label>
+                <input type="text" name="nombre_zona" class="form-control" placeholder="Ej: Living, Suite Principal" required>
+            </div>
+
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>Largo (m):</label>
+                    <input type="number" step="0.01" name="largo" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Alto / Ancho (m):</label>
+                    <input type="number" step="0.01" name="alto_ancho" class="form-control" required>
+                </div>
+            </div>
+
+            <div class="grid-3">
+                <div class="form-group">
+                    <label>Estructura:</label>
+                    <select name="tipo_estructura" class="form-control">
+                        <option value="MURO_SIMPLE">Muro Cara Simple</option>
+                        <option value="MURO_DOBLE">Muro Doble Cara (Divisorio)</option>
+                        <option value="CIELORRASO">Cielorraso / Techo Suspendido</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Tipo de Placa:</label>
+                    <select name="tipo_placa" class="form-control">
+                        <option value="ST">Estándar (Gris)</option>
+                        <option value="RH">Resistente Humedad (Verde)</option>
+                        <option value="RF">Resistente Fuego (Rosa)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Perfilería:</label>
+                    <select name="medida_perfil" class="form-control">
+                        <option value="35">35 mm</option>
+                        <option value="70">70 mm</option>
+                        <option value="100">100 mm</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid-3">
+                <div class="form-group">
+                    <label>Puertas:</label>
+                    <input type="number" name="puertas" class="form-control" value="0" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Ventanas:</label>
+                    <input type="number" name="ventanas" class="form-control" value="0" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Mano Obra / m²:</label>
+                    <input type="number" step="0.01" name="mano_obra" class="form-control" value="0">
+                </div>
+            </div>
+
+            <div class="form-group" style="flex-direction: row; align-items: center; gap: 10px; margin-top: 10px;">
+                <input type="checkbox" id="aislacion" name="aislacion" style="transform: scale(1.2);">
+                <label for="aislacion" style="margin: 0; cursor: pointer;">Llevará Aislación con Lana de Vidrio</label>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 15px;">Cargar Ambiente al Listado</button>
+        </form>
+    </div>
+
+    <!-- Lista de Ambientes Computados y Cómputo Final -->
+    <div>
+        <h3>Ambientes de esta Obra</h3>
+        {% for a in proyecto.ambientes.all %}
+            <div style="padding: 12px; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; background: white;">
+                <div>
+                    <strong style="color: var(--primary);">{{ a.nombre_zona }}</strong> 
+                    {% if a.con_aislacion %}<span class="badge badge-success">Con Lana de Vidrio</span>{% endif %}<br>
+                    <span style="font-size: 13px; color: #57606f;">
+                        {{ a.get_tipo_estructura_display }} | Placa: {{ a.get_tipo_placa_display }} | Perfil: {{ a.medida_perfil }}mm
+                    </span>
+                </div>
+                <form method="POST" style="margin: 0;">
+                    {% csrf_token %}
+                    <input type="hidden" name="eliminar_ambiente" value="1">
+                    <input type="hidden" name="ambiente_id" value="{{ a.id }}">
+                    <button type="submit" class="btn btn-danger" style="padding: 3px 8px; font-size: 12px;" onclick="return confirm('¿Remover este ambiente?');">×</button>
+                </form>
+            </div>
+        {% empty %}
+            <p style="color: #7f8c8d; font-style: italic; text-align: center; padding: 20px;">Ningún ambiente ingresado.</p>
+        {% endfor %}
+
+        <!-- Bloque de Materiales Consolidados -->
+                <!-- Bloque de Materiales Consolidados -->
+        {% if resultados %}
+            <div style="margin-top: 30px; border-top: 2px dashed var(--border); padding-top: 20px;">
+                
+                <!-- NUEVO FORMULARIO: Control dinámico de Desperdicio por parte del usuario -->
+                <div style="background: var(--light); padding: 15px; border-radius: 6px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                    <form method="GET" style="display: flex; gap: 10px; align-items: flex-end; margin: 0;">
+                        <div class="form-group" style="margin: 0; max-width: 180px;">
+                            <label for="desperdicio" style="font-size: 13px; font-weight: bold;">% Desperdicio Técnico:</label>
+                            <input type="number" min="0" max="50" id="desperdicio" name="desperdicio" class="form-control" value="{{ request.GET.desperdicio|default:'10' }}" style="height: 34px; padding: 4px 8px;">
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="height: 34px; padding: 0 15px; font-size: 13px;">Recalcular Obra</button>
+                    </form>
+                    
+                    <!-- BOTONES DE EXPORTACIÓN UNIFICADOS -->
+                    <div style="display: flex; gap: 10px;">
+                        <!-- NUEVO BOTÓN: Exportar a Excel -->
+                        <a href="{% url 'exportar_excel' proyecto.id %}?desperdicio={{ request.GET.desperdicio|default:'10' }}" class="btn" style="font-size: 13px; padding: 8px 15px; height: fit-content; background: #27ae60; color: white; border-radius: 4px; text-decoration: none; font-weight: bold;">
+                            📊 Exportar Lista Excel
+                        </a>
+                        
+                        <!-- Botón de PDF Comercial -->
+                        <a href="{% url 'exportar_pdf' proyecto.id %}?desperdicio={{ request.GET.desperdicio|default:'10' }}" class="btn btn-success" style="font-size: 13px; padding: 8px 15px; height: fit-content;">
+                            Exportar Presupuesto Completo PDF
+                        </a>
+                    </div>
+                </div>
+
+                <h3>Lista de Compras Consolidada</h3>
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Insumo Comercial Embalado</th>
+                            <th>Cant.</th>
+                            <th>Formato</th>
+                            <th>Precio Unitario</th>
+                            <th>Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in resultados.materiales_lista %}
+                            <tr>
+                                <td>{{ item.material }}</td>
+                                <td><strong>{{ item.cantidad }}</strong></td>
+                                <td>{{ item.unidad }}</td>
+                                <td>${{ item.precio_unitario }}</td>
+                                <td>${{ item.subtotal }}</td>
+                            </tr>
+                        {% endfor %}
+                        <tr style="background: #e1f5fe; font-weight: bold;">
+                            <td colspan="4" style="color: #0288d1; text-align: right;">PRESUPUESTO GENERAL CONSOLIDADO:</td>
+                            <td style="color: var(--success); font-size: 16px;">${{ resultados.total_presupuesto }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Panel Analítico NATIVO (100% CSS) -->
+                <div id="contenedorDatosCostos" 
+                     data-materiales="{{ resultados.costo_materiales_solo|stringformat:'.2f' }}" 
+                     data-mo="{{ resultados.costo_mo_solo|stringformat:'.2f' }}"
+                     style="margin-top: 30px; background: white; border: 1px solid var(--border); padding: 20px; border-radius: 8px;">
+                    
+                    <h4 style="margin-bottom: 15px; text-align: center; color: var(--primary);">📊 Distribución del Presupuesto Comercial</h4>
+                    
+                    <div style="width: 100%; height: 25px; background-color: #e0e0e0; border-radius: 12px; display: flex; overflow: hidden; margin-bottom: 15px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);">
+                        <div id="segmentoMateriales" style="background: #2c3e50; height: 100%; width: 0%; transition: width 0.5s ease;"></div>
+                        <div id="segmentoMO" style="background: #27ae60; height: 100%; width: 0%; transition: width 0.5s ease;"></div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-around; font-size: 14px; font-weight: bold;">
+                        <span style="color: #2c3e50;">● Placas y Perfiles: <span id="txtPorcentajeMat">0%</span></span>
+                        <span style="color: #27ae60;">● Mano de Obra: <span id="txtPorcentajeMO">0%</span></span>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const contenedor = document.getElementById('contenedorDatosCostos');
+        if (contenedor) {
+            const matVal = parseFloat(contenedor.getAttribute('data-materiales')) || 0;
+            const moVal = parseFloat(contenedor.getAttribute('data-mo')) || 0;
+            const totalVal = matVal + moVal;
+
+            if (totalVal > 0) {
+                const porcMat = Math.round((matVal / totalVal) * 100);
+                const porcMO = Math.round((moVal / totalVal) * 100);
+
+                const elementMat = document.getElementById('segmentoMateriales');
+                const elementMO = document.getElementById('segmentoMO');
+                
+
+                
+                if (elementMat) elementMat.style.width = porcMat + '%';
+                if (elementMO) elementMO.style.width = porcMO + '%';
+
+                const txtMat = document.getElementById('txtPorcentajeMat');
+                const txtMO = document.getElementById('txtPorcentajeMO');
+                
+                if (txtMat) txtMat.innerText = porcMat + '%';
+                if (txtMO) txtMO.innerText = porcMO + '%';
+            }
+        }
+    });
+</script>
+{% endblock %}
+

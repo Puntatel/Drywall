@@ -1,0 +1,86 @@
+{% if resultados %}
+    <div class="header-resultados">
+        <h3>Cómputo Métrico de Materiales</h3>
+        <div style="display: flex; gap: 0.5rem;">
+            <a href="{% url 'panel' %}" class="btn-action btn-new">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                Nuevo Cálculo
+            </a>
+            <a href="{% url 'exportar_pdf' proyecto_id %}" class="btn-action btn-pdf">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                Exportar PDF
+            </a>
+        </div>
+    </div>
+    
+    <div class="meta-info">
+        <div>Área Bruta: <strong>{{ resultados.area_bruta }} m²</strong></div>
+        <div style="color: #e67e22;">Descuentos: <strong>-{{ resultados.area_descontada }} m²</strong></div>
+        <div>Área Neta: <strong style="color: var(--success);">{{ resultados.area_neta }} m²</strong></div>
+    </div>
+
+    <div style="overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Material Requerido / Insumo</th>
+                    <th>Cantidad</th>
+                    <th>Precio Unit.</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in resultados.items %}
+                    <tr>
+                        <td style="font-weight: 500;">{{ item.material }}</td>
+                        <td><strong>{{ item.cantidad }}</strong></td>
+                        <td style="color: var(--text-muted);">${{ item.precio_unitario }}</td>
+                        <td style="font-weight: 600;">${{ item.subtotal }}</td>
+                    </tr>
+                {% endfor %}
+                <tr class="total-row">
+                    <td colspan="3" style="border-radius: 0.5rem 0 0 0.5rem;">PRESUPUESTO ESTIMADO TOTAL:</td>
+                    <td style="border-radius: 0 0.5rem 0.5rem 0; font-size: 1.15rem;">${{ resultados.total_presupuesto }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Gráfico de Barras CSS -->
+    <div style="margin-top: 3rem; background: #f8fafc; padding: 1.5rem; border-radius: 0.5rem; border: 1px solid var(--border-color);">
+        <h4 style="margin-top: 0; margin-bottom: 1.25rem; font-size: 1.1rem;">Distribución Económica del Presupuesto</h4>
+        <div style="display: flex; flex-direction: column; gap: 1.15rem;">
+            {% for item in resultados.items %}
+                {% if item.subtotal > 0 %}
+                    {% widthratio item.subtotal resultados.total_presupuesto 100 as porcentaje %}
+                    <div>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.825rem; font-weight: 500; margin-bottom: 0.35rem; color: #475569;">
+                            <span>{{ item.material }}</span>
+                            <span style="font-weight: 600; color: var(--text-main);">${{ item.subtotal }} ({{ porcentaje }}%)</span>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-bar js-progress {% cycle 'bar-color-1' 'bar-color-2' 'bar-color-3' 'bar-color-4' 'bar-color-5' 'bar-color-6' 'bar-color-7' 'bar-color-8' %}" data-width="{{ porcentaje }}"></div>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+        <div style="margin-top: 2rem; text-align: right; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+            <a href="{% url 'panel' %}" style="display: inline-flex; align-items: center; gap: 0.5rem; background: var(--slate-800); color: white; padding: 0.625rem 1.25rem; text-decoration: none; border-radius: 0.5rem; font-weight: 600; font-size: 0.875rem;">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/></svg>
+                Volver a Calcular Nueva Estructura
+            </a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            document.querySelectorAll('.js-progress').forEach(function(bar) {
+                const widthValue = bar.getAttribute('data-width');
+                if (widthValue) {
+                    bar.style.setProperty('width', widthValue + '%', 'important');
+                }
+            });
+        });
+    </script>
+{% endif %}

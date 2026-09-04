@@ -1,0 +1,56 @@
+{% extends 'calculador/base.html' %}
+
+{% block title %}Mi Perfil Comercial{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid var(--primary); padding-bottom: 10px;">
+    <h2 style="margin: 0;">Configuración de Identidad Comercial</h2>
+    <a href="{% url 'panel_calculadora' %}" class="btn" style="background: #7f8c8d; color: white;">← Volver al Panel</a>
+</div>
+
+<div style="max-width: 600px; background: var(--light); padding: 25px; border-radius: 8px; border: 1px solid var(--border); margin: 0 auto;">
+    <p style="color: #7f8c8d; margin-top: 0; margin-bottom: 20px;">Los datos ingresados aquí se inyectarán de forma automática en el membrete superior y bloques de firma de todos los presupuestos PDF que genere.</p>
+
+    <!-- Alerta de éxito -->
+    {% if mensaje %}
+        <div style="background: #d4edda; color: #155724; padding: 12px; border-radius: 4px; border: 1px solid #c3e6cb; margin-bottom: 20px; font-weight: bold;">
+            {{ mensaje }}
+        </div>
+    {% endif %}
+
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="nombre_comercial">Nombre de la Empresa o Contratista:</label>
+            <input type="text" id="nombre_comercial" name="nombre_comercial" class="form-control" value="{{ perfil.nombre_comercial }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="nit_rut">NIT / RUT / Identificación Fiscal:</label>
+            <input type="text" id="nit_rut" name="nit_rut" class="form-control" value="{{ perfil.nit_rut|default:'' }}" placeholder="Ej: 900.123.456-1">
+        </div>
+
+        <div class="form-group">
+            <label for="leyenda_comercial">Leyenda o Subtítulo Comercial:</label>
+            <input type="text" id="leyenda_comercial" name="leyenda_comercial" class="form-control" value="{{ perfil.leyenda_comercial }}">
+        </div>
+
+        <!-- CAMBIO CLAVE: Botón clásico de examinar archivos locales de tu PC -->
+        <div class="form-group">
+            <label for="logo">Subir Logotipo de la Empresa (Opcional):</label>
+            <input type="file" id="logo" name="logo" class="form-control" accept="image/*">
+            {% if perfil.logo %}
+                <small style="color: #27ae60; display: block; margin-top: 5px;">✓ Ya tiene un logo guardado en el sistema.</small>
+            {% else %}
+                <small style="color: #7f8c8d; display: block; margin-top: 5px;">Si se deja vacío, el PDF se generará limpiamente en formato neutral.</small>
+            {% endif %}
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 15px; height: 42px; font-size: 15px;">
+            Guardar Cambios de Identidad
+        </button>
+    </form>
+
+</div>
+{% endblock %}

@@ -1,0 +1,63 @@
+<h2>Nuevo Cálculo de Estructura</h2>
+<form method="POST">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="cliente">Nombre del Cliente / Proyecto</label>
+        <input type="text" id="cliente" name="cliente" required placeholder="Ej: Obra Corporativa Sala A" value="{{ request.POST.cliente|default:'' }}">
+    </div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+            <label for="largo">Largo (Metros lineales)</label>
+            <input type="number" step="0.01" id="largo" name="largo" min="0.1" required placeholder="0.00" value="{{ request.POST.largo|default:'' }}">
+        </div>
+        <div class="form-group">
+            <label for="alto_ancho">Alto / Ancho (Metros)</label>
+            <input type="number" step="0.01" id="alto_ancho" name="alto_ancho" min="0.1" required placeholder="0.00" value="{{ request.POST.alto_ancho|default:'' }}">
+        </div>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+            <label for="tipo_estructura">Tipo de Estructura</label>
+            <select id="tipo_estructura" name="tipo_estructura">
+                <option value="MURO_SIMPLE" {% if request.POST.tipo_estructura == 'MURO_SIMPLE' %}selected{% endif %}>Muro Revestido (1 Sola Cara)</option>
+                <option value="MURO_DOBLE" {% if request.POST.tipo_estructura == 'MURO_DOBLE' %}selected{% endif %}>Muro Divisorio (Doble Cara)</option>
+                <option value="CIELORRASO" {% if request.POST.tipo_estructura == 'CIELORRASO' %}selected{% endif %}>Cielorraso / Techo Suspendido</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="medida_perfil">Estructura de Perfilería</label>
+            <select id="medida_perfil" name="medida_perfil">
+                <option value="35" {% if request.POST.medida_perfil == '35' %}selected{% endif %}>35 mm (Estructura Fina)</option>
+                <option value="70" {% if request.POST.medida_perfil == '70' %}selected{% endif %}>70 mm (Estándar)</option>
+                <option value="100" {% if request.POST.medida_perfil == '100' %}selected{% endif %}>100 mm (Reforzado)</option>
+            </select>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+            <label for="puertas">Cantidad de Puertas (Solo Muros)</label>
+            <input type="number" id="puertas" name="puertas" value="{{ request.POST.puertas|default:'0' }}" min="0">
+        </div>
+        <div class="form-group">
+            <label for="ventanas">Cantidad de Ventanas (Solo Muros)</label>
+            <input type="number" id="ventanas" name="ventanas" value="{{ request.POST.ventanas|default:'0' }}" min="0">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="mano_obra">Costo de Mano de Obra por m² (Opcional)</label>
+        <input type="number" step="0.01" id="mano_obra" name="mano_obra" placeholder="$ 0.00 (Dejar en 0 si solo cotiza materiales)" value="{{ request.POST.mano_obra|default:'' }}" min="0">
+    </div>
+
+    <div class="form-group" style="margin: 1.5rem 0; display: flex; align-items: center; gap: 0.625rem; background: #f8fafc; padding: 0.75rem 1rem; border-radius: 0.5rem; border: 1px solid var(--border-color);">
+        <input type="checkbox" id="aislacion" name="aislacion" value="on" style="width: auto; scale: 1.2; cursor: pointer;" {% if request.POST.aislacion %}checked{% endif %}>
+        <label for="aislacion" style="margin-bottom: 0; cursor: pointer; font-size: 0.875rem; user-select: none;">
+            Incluir Aislación Térmica y Acústica (Lana de vidrio)
+        </label>
+    </div>
+
+    <button type="submit" class="btn-submit">Generar Cómputo y Costos</button>
+</form>

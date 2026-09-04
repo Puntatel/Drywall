@@ -1,0 +1,87 @@
+{% extends 'calculador/base.html' %}
+
+{% block title %}Tablero Principal - Drywall Calc{% endblock %}
+
+{% block content %}
+<!-- Barra superior de bienvenida y navegación SaaS segura -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; background: #eaedf1; padding: 12px 20px; border-radius: 8px;">
+    <span style="font-size: 14px; color: #2c3e50;">👋 Bienvenido, operario: <strong style="color: var(--primary);">{{ request.user.username }}</strong></span>
+    <div style="display: flex; gap: 10px; align-items: center;">
+        <a href="{% url 'configuracion_perfil' %}" class="btn" style="background: #2980b9; color: white; font-size: 13px; padding: 8px 14px; text-decoration: none; border-radius: 4px; font-weight: bold;">
+            ⚙️ Mi Empresa / Logo
+        </a>
+        <form action="{% url 'logout' %}" method="POST" style="margin: 0; display: inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn" style="background: var(--danger); color: white; font-size: 13px; padding: 8px 14px; border: none; cursor: pointer; border-radius: 4px; font-weight: bold;" onclick="return confirm('¿Cerrar sesión actual?');">
+                🚪 Salir
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="grid-2" style="grid-template-columns: 1fr 2fr; gap: 30px;">
+    
+    <!-- Zona Izquierda: Apertura de Nuevas Obras -->
+    <div style="background: var(--light); padding: 25px; border-radius: 8px; border: 1px solid var(--border); height: fit-content;">
+        <h3 style="margin-top: 0; color: var(--primary); margin-bottom: 15px;">🆕 Iniciar Nueva Cotización</h3>
+        <p style="color: #7f8c8d; font-size: 13px; margin-bottom: 20px; line-height: 1.4;">Ingrese el nombre de su cliente o la dirección de la obra para abrir un nuevo canal de cómputo de materiales.</p>
+        
+        <form method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="cliente" style="font-weight: 600; font-size: 14px; margin-bottom: 6px; display: block;">Nombre del Cliente / Obra:</label>
+                <input type="text" id="cliente" name="cliente" class="form-control" placeholder="Ej: Juan Pérez - Muro Living" required style="padding: 10px;">
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 15px; height: 40px; font-weight: bold;">
+                Abrir Canal de Cómputo →
+            </button>
+        </form>
+    </div>
+
+    <!-- Zona Derecha: Historial de Obras Pasadas (Multi-Empresa Seguro) -->
+    <div style="background: white; padding: 25px; border-radius: 8px; border: 1px solid var(--border);">
+        <h3 style="margin-top: 0; color: #2c3e50; margin-bottom: 5px;">📜 Historial de Obras Pasadas</h3>
+        <p style="color: #7f8c8d; font-size: 13px; margin-bottom: 20px;">Listado histórico y cronológico de todas las cotizaciones guardadas en su cuenta.</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID Obra</th>
+                    <th>Cliente / Detalle Obra</th>
+                    <th>Fecha de Creación</th>
+                    <th style="text-align: center;">Acciones Comerciales</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in proyectos %}
+                    <tr>
+                        <td style="color: #7f8c8d; font-family: monospace;">#{{ p.id|stringformat:"04d" }}</td>
+                        <td>
+                            <strong style="color: #2c3e50;">{{ p.nombre_cliente }}</strong>
+                        </td>
+                        <td style="color: #57606f; font-size: 13px;">{{ p.fecha_creacion|date:"d/m/Y H:i" }}</td>
+                        <td style="text-align: center;">
+                            <div style="display: flex; gap: 8px; justify-content: center;">
+                                <!-- Abrir detalles para añadir más habitaciones -->
+                                <a href="{% url 'gestion_ambientes' p.id %}" class="btn" style="background: #34495e; color: white; padding: 5px 10px; font-size: 12px; text-decoration: none; border-radius: 4px; font-weight: 500;">
+                                    🔍 Ver Detalles
+                                </a>
+                                <!-- Descarga directa del PDF comercial -->
+                                <a href="{% url 'exportar_pdf' p.id %}" class="btn btn-success" style="padding: 5px 10px; font-size: 12px; text-decoration: none; border-radius: 4px; font-weight: 500;">
+                                    📥 Descargar PDF
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="4" style="text-align: center; color: #7f8c8d; font-style: italic; padding: 30px;">
+                            No ha registrado ninguna obra todavía. ¡Abra su primera cotización a la izquierda!
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
